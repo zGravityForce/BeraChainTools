@@ -28,6 +28,8 @@ from eth_account import Account
 from loguru import logger
 
 from bera_tools import BeraChainTools
+import time
+
 
 def LingShui(key):
 
@@ -208,10 +210,28 @@ def WriteKey(text = ''):
 if __name__ == '__main__':
     # print(get_no_captcha_google_token(''))
     client_key = ReadKey()
+
+    next_call = time.time() + 28801  # 当前时间加上8小时（以秒为单位）
+
     wallet_key = LingShui(client_key)
-    Bex(wallet_key)
-    Honey(wallet_key)
-    Bend(wallet_key)
-    honeyjar(wallet_key)
-    contract(wallet_key)
-    domain(wallet_key)
+
+    while True:
+        current_time = time.time()
+
+        if current_time >= next_call:
+            LingShui(client_key)
+            next_call = current_time + 28801  # 更新下一次调用的时间
+        
+
+        Bex(wallet_key)
+        time.sleep(60)
+        Honey(wallet_key)
+        time.sleep(60)
+        Bend(wallet_key)
+        time.sleep(60)
+        honeyjar(wallet_key)
+        time.sleep(60)
+        contract(wallet_key)
+        time.sleep(60)
+        domain(wallet_key)
+        time.sleep(300)
