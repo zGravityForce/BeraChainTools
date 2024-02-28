@@ -1,0 +1,1 @@
+https://yescaptcha.com/auth/register 需要api key
