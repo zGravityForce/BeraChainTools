@@ -23,7 +23,7 @@ from config.other_config import emoji_list
 
 
 class BeraChainTools(object):
-    def __init__(self, private_key, client_key='', solver_provider='', rpc_url='https://artio.rpc.berachain.com/'):
+    def __init__(self, private_key, client_key='', solver_provider='', rpc_url='https://artio.rpc.berachain.com/', proxy=''):
         # if solver_provider not in ["yescaptcha", "2captcha", "ez-captcha", ""]:
         if solver_provider not in ["yescaptcha", "2captcha"]:
             raise ValueError("solver_provider must be 'yescaptcha' or '2captcha' or 'ez-captcha' ")
@@ -44,6 +44,12 @@ class BeraChainTools(object):
         self.bend_borrows_contract = self.w3.eth.contract(address=bend_borrows_address, abi=bend_borrows_abi)
         self.ooga_booga_contract = self.w3.eth.contract(address=ooga_booga_address, abi=ooga_booga_abi)
         self.bera_name_contract = self.w3.eth.contract(address=bera_name_address, abi=bera_name_abi)
+        self.proxies = {
+            'http': proxy,
+            'https': proxy,
+        }
+
+        self.session.proxies.update(self.proxies)
 
     def get_2captcha_google_token(self) -> Union[bool, str]:
         if self.client_key == '':
@@ -53,13 +59,13 @@ class BeraChainTools(object):
                   'googlekey': '6LfOA04pAAAAAL9ttkwIz40hC63_7IsaU2MgcwVH',
                   'pageurl': 'https://artio.faucet.berachain.com/',
                   'json': 1}
-        response = requests.get(f'https://2captcha.com/in.php?', params=params).json()
+        response = requests.get(f'https://2captcha.com/in.php?', params=params, proxies=self.proxies).json()
         if response['status'] != 1:
             raise ValueError(response)
         task_id = response['request']
         for _ in range(60):
             response = requests.get(
-                f'https://2captcha.com/res.php?key={self.client_key}&action=get&id={task_id}&json=1').json()
+                f'https://2captcha.com/res.php?key={self.client_key}&action=get&id={task_id}&json=1', proxies=self.proxies).json()
             if response['status'] == 1:
                 return response['request']
             else:
@@ -73,13 +79,13 @@ class BeraChainTools(object):
                   'sitekey': '0x4AAAAAAARdAuciFArKhVwt',
                   'pageurl': 'https://artio.faucet.berachain.com/',
                   'json': 1}
-        response = requests.get(f'https://2captcha.com/in.php?', params=params).json()
+        response = requests.get(f'https://2captcha.com/in.php?', params=params, proxies=self.proxies).json()
         if response['status'] != 1:
             raise ValueError(response)
         task_id = response['request']
         for _ in range(60):
             response = requests.get(
-                f'https://2captcha.com/res.php?key={self.client_key}&action=get&id={task_id}&json=1').json()
+                f'https://2captcha.com/res.php?key={self.client_key}&action=get&id={task_id}&json=1', proxies=self.proxies).json()
             if response['status'] == 1:
                 return response['request']
             else:
@@ -100,7 +106,7 @@ class BeraChainTools(object):
         time.sleep(5)
         for _ in range(30):
             data = {"clientKey": self.client_key, "taskId": task_id}
-            response = requests.post(url='https://api.yescaptcha.com/getTaskResult', json=data).json()
+            response = requests.post(url='https://api.yescaptcha.com/getTaskResult', json=data, proxies=self.proxies).json()
             if response['status'] == 'ready':
                 return response['solution']['gRecaptchaResponse']
             else:
@@ -121,7 +127,7 @@ class BeraChainTools(object):
         time.sleep(5)
         for _ in range(30):
             data = {"clientKey": self.client_key, "taskId": task_id}
-            response = requests.post(url='https://api.yescaptcha.com/getTaskResult', json=data).json()
+            response = requests.post(url='https://api.yescaptcha.com/getTaskResult', json=data, proxies=self.proxies).json()
             if response['status'] == 'ready':
                 return response['solution']['token']
             else:
@@ -143,7 +149,7 @@ class BeraChainTools(object):
         time.sleep(5)
         for _ in range(30):
             data = {"clientKey": self.client_key, "taskId": task_id}
-            response = requests.post(url='https://api.ez-captcha.com/getTaskResult', json=data).json()
+            response = requests.post(url='https://api.ez-captcha.com/getTaskResult', json=data, proxies=self.proxies).json()
             if response['status'] == 'ready':
                 return response['solution']['gRecaptchaResponse']
             else:
@@ -184,7 +190,7 @@ class BeraChainTools(object):
         # if proxies is not None:
         #     proxies = {"http": f"http://{proxies}", "https": f"http://{proxies}"}
         response = requests.post('https://artio-80085-faucet-api-cf.berachain.com/api/claim', params=params,
-                                 headers=headers, data=json.dumps(params), proxies=proxies)
+                                 headers=headers, data=json.dumps(params), proxies=self.proxies)
         return response
 
     def approve_token(self, spender: Union[Address, ChecksumAddress], amount: int,

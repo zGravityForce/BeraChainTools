@@ -1,37 +1,21 @@
+# 首先，导入必要的库和模块
 from eth_account import Account
 from loguru import logger
-from bera_tools import BeraChainTools
-from config.address_config import (
-    usdc_address, wbear_address, weth_address, bex_approve_liquidity_address,
-    usdc_pool_liquidity_address, weth_pool_liquidity_address
-)
-import os
-from config.address_config import honey_swap_address, usdc_address, honey_address
-
-    
-from config.address_config import bend_address, weth_address, honey_address, bend_pool_address
-
-from eth_account import Account
-from loguru import logger
-
-from bera_tools import BeraChainTools
-from config.address_config import ooga_booga_address, honey_address
-
-from eth_account import Account
-from loguru import logger
-from solcx import install_solc
-
-from bera_tools import BeraChainTools
-from config.address_config import ooga_booga_address, honey_address
-
-from eth_account import Account
-from loguru import logger
-
 from bera_tools import BeraChainTools
 import time
 
+# 接下来，从配置文件中导入所有需要的地址
+from config.address_config import (
+    usdc_address, wbear_address, weth_address, 
+    bex_approve_liquidity_address, usdc_pool_liquidity_address, 
+    weth_pool_liquidity_address, honey_swap_address, honey_address,
+    bend_address, bend_pool_address, ooga_booga_address
+)
 
-def LingShui(key):
+
+
+
+def LingShui(key, proxy):
 
 
     address = ""
@@ -58,7 +42,7 @@ def LingShui(key):
     
     client_key = f'{key}'
     # 使用yescaptcha solver googlev3
-    bera = BeraChainTools(private_key=wallet_key, client_key=client_key,solver_provider='yescaptcha',rpc_url='https://rpc.ankr.com/berachain_testnet')
+    bera = BeraChainTools(private_key=wallet_key, client_key=client_key,solver_provider='yescaptcha',rpc_url='https://rpc.ankr.com/berachain_testnet', proxy=proxy)
     # 使用2captcha solver googlev3
     # bera = BeraChainTools(private_key=wallet_key, client_key=client_key,solver_provider='2captcha',rpc_url='https://rpc.ankr.com/berachain_testnet')
     # 使用ez-captcha solver googlev3
@@ -71,9 +55,9 @@ def LingShui(key):
     logger.debug(result.text)
     return wallet_key
 
-def Bex(wallet_key):
+def Bex(wallet_key, proxy):
     account = Account.from_key(wallet_key)
-    bera = BeraChainTools(private_key=account.key, rpc_url='https://rpc.ankr.com/berachain_testnet')
+    bera = BeraChainTools(private_key=account.key, rpc_url='https://rpc.ankr.com/berachain_testnet', proxy=proxy)
 
     # bex 使用bera交换usdc
     bera_balance = bera.w3.eth.get_balance(account.address)
@@ -100,9 +84,9 @@ def Bex(wallet_key):
     result = bera.bex_add_liquidity(int(weth_balance * 0.5), weth_pool_liquidity_address, weth_address)
     logger.debug(result)
 
-def Honey(wallet_key):
+def Honey(wallet_key, proxy):
     account = Account.from_key(wallet_key)
-    bera = BeraChainTools(private_key=account.key, rpc_url='https://rpc.ankr.com/berachain_testnet')
+    bera = BeraChainTools(private_key=account.key, rpc_url='https://rpc.ankr.com/berachain_testnet', proxy=proxy)
 
     # 授权usdc
     approve_result = bera.approve_token(honey_swap_address, int("0x" + "f" * 64, 16), usdc_address)
@@ -122,10 +106,10 @@ def Honey(wallet_key):
 
 
 
-def Bend(wallet_key):
+def Bend(wallet_key, proxy):
 
     account = Account.from_key(wallet_key)
-    bera = BeraChainTools(private_key=account.key, rpc_url='https://rpc.ankr.com/berachain_testnet')
+    bera = BeraChainTools(private_key=account.key, rpc_url='https://rpc.ankr.com/berachain_testnet', proxy=proxy)
 
     # 授权
     approve_result = bera.approve_token(bend_address, int("0x" + "f" * 64, 16), weth_address)
@@ -153,10 +137,10 @@ def Bend(wallet_key):
     logger.debug(result)
 
 
-def honeyjar(wallet_key):
+def honeyjar(wallet_key, proxy):
 
     account = Account.from_key(wallet_key)
-    bera = BeraChainTools(private_key=account.key, rpc_url='https://rpc.ankr.com/berachain_testnet')
+    bera = BeraChainTools(private_key=account.key, rpc_url='https://rpc.ankr.com/berachain_testnet', proxy=proxy)
 
 
     # https://faucet.0xhoneyjar.xyz/mint
@@ -167,9 +151,9 @@ def honeyjar(wallet_key):
     result = bera.honey_jar_mint()
     logger.debug(result)
 
-def contract(wallet_key):
+def contract(wallet_key, proxy):
     account = Account.from_key(wallet_key)
-    bera = BeraChainTools(private_key=account.key, rpc_url='https://rpc.ankr.com/berachain_testnet')
+    bera = BeraChainTools(private_key=account.key, rpc_url='https://rpc.ankr.com/berachain_testnet', proxy=proxy)
 
     # 安装0.4.18 版本编译器
     install_solc('0.4.18')
@@ -180,9 +164,9 @@ def contract(wallet_key):
         result = bera.deploy_contract(code, '0.4.18')
         logger.debug(result)
 
-def domain(wallet_key):
+def domain(wallet_key, proxy):
     account = Account.from_key(wallet_key)
-    bera = BeraChainTools(private_key=account.key, rpc_url='https://rpc.ankr.com/berachain_testnet')
+    bera = BeraChainTools(private_key=account.key, rpc_url='https://rpc.ankr.com/berachain_testnet', proxy=proxy)
     result = bera.create_bera_name()
     logger.debug(result)
 
@@ -206,32 +190,41 @@ def WriteKey(text = ''):
 
     print("Wallet written to file successfully.")
 
+def getSocks5():
+    file_path = './s5_ip.txt'
+    with open(file_path, 'r') as file:
+        content = file.read()
+    return content
+    
 
 if __name__ == '__main__':
     # print(get_no_captcha_google_token(''))
+
+    proxy = getSocks5()
+
     client_key = ReadKey()
 
     next_call = time.time() + 28801  # 当前时间加上8小时（以秒为单位）
 
-    wallet_key = LingShui(client_key)
+    wallet_key = LingShui(client_key, proxy)
 
     while True:
         current_time = time.time()
 
         if current_time >= next_call:
-            LingShui(client_key)
+            LingShui(client_key, proxy)
             next_call = current_time + 28801  # 更新下一次调用的时间
         
 
-        Bex(wallet_key)
+        Bex(wallet_key, proxy)
         time.sleep(60)
-        Honey(wallet_key)
+        Honey(wallet_key, proxy)
         time.sleep(60)
-        Bend(wallet_key)
+        Bend(wallet_key, proxy)
         time.sleep(60)
-        honeyjar(wallet_key)
+        honeyjar(wallet_key, proxy)
         time.sleep(60)
-        contract(wallet_key)
+        contract(wallet_key, proxy)
         time.sleep(60)
-        domain(wallet_key)
+        domain(wallet_key, proxy)
         time.sleep(300)
